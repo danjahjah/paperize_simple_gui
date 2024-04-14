@@ -51,12 +51,30 @@ class App(tk.Tk):
     def append_text_error(self, text):
       self.text.insert(tk.END, text, 'warning')
 
+    def lock_buttons(self):
+      self.btn_paper.config(state="disabled")
+      self.btn_file.config(state="disabled")
 
+    def unlock_buttons(self):    
+      self.btn_paper.config(state="normal")
+      self.btn_file.config(state="normal")
+
+    def auto_unlock(func):
+      """автоматически разблокирует кнопки при выходе из метода"""
+      def inner(self):         
+        func(self)        
+        self.unlock_buttons()     
+      return inner    
+
+    @auto_unlock
     def proceed_text(self):
+      """Конвертация текста QR Кода в исходный файл"""
        
       filename=[]
+      self.lock_buttons()
       res, size = self.open_file()
 
+      
       if res is None:
           self.append_text_error( f"Error opening file\n")
           return
@@ -78,12 +96,18 @@ class App(tk.Tk):
       self.append_text( f"Conversion complete\n")
 
 
+    
+      
+    @auto_unlock
     def proceed_file(self):
+        """Конвертация файла в QR Код"""
         filename=[]
+        self.lock_buttons()
         res, size = self.open_file()
+        
 
         if res is None:
-          self.append_text_error( f"Error opening file\n")
+          self.append_text_error( f"Error opening file\n")          
           return
 
         size_print = convert_size(size)
@@ -98,12 +122,12 @@ class App(tk.Tk):
           paperize.mode_paper(filename, self.QrCorrectionLevel)
         except Exception as e:
           self.append_text_error( f"Error occured while converting:\n{e}\n") 
-          self.append_text( f"Conversion not complete\n") 
+          self.append_text( f"Conversion not complete\n")           
           return
 
         end = time.time()
         elapsed = end-start
-        self.append_text( f"Conversion complete in {round(elapsed,2)} sec.\n")
+        self.append_text( f"Conversion complete in {round(elapsed,2)} sec.\n")        
 
 
     def get_settings(self):
